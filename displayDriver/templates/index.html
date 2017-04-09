@@ -1,0 +1,21 @@
+<ul>
+
+<ul id="results">
+     {% for drivers in drivers %}
+         <h3><li>{{ drivers.first_name }} {{ drivers.last_name }}</h3>
+{#     <li>Result{{ forloop.counter }}: {{ result.first_name }}, {{ result.last_name }}, {{ result.driver_license }} ...</li>#}
+        <ul>
+             {% for timelogs in drivers.timelogs %}
+            <li> <a href="/canvas/?lic={{drivers.driver_license}}&timelog_id={{ timelogs.timelog_id }}">{{ timelogs.timelog_id }} </a>
+            <ul>
+                 {% for event in timelogs.timelog_events %}
+{#                      <li>{{ event.event_start_time }},{{ event.driver_status }}</li> #}
+                 {% endfor %}
+            </ul>
+                 </li>
+        {% endfor %}
+         </ul>
+     {% endfor %}
+</ul>
+
+</ul>

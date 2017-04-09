@@ -1,0 +1,304 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Html5 Chart </title>
+  <script type="text/javascript">
+
+  window. onload = function () {
+
+
+    var stepDataArray = [
+            {% for da in timelog_display_array %}
+                        { x: {{ da.x }}, y: {{ da.y }} },
+            {% endfor %}
+                     ];
+
+
+    var sbHours = 0.0;
+    var offHours = 0.0;
+    var dHours = 0.0;
+    var onHours = 0.0;
+
+    var chart= new CanvasJS.Chart("chartContainer", {
+
+       animationEnabled: true,
+      zoomEnabled:true,
+      //width:750,
+      //height: 160,
+
+      legend:{
+        verticalAlign: "bottom",
+        horizontalAlign: "center"
+      },
+
+      axisY:{
+        interval: 1,
+        gridThickness: 1,
+        gridColor: "transparent",
+        interlacedColor: "transparent",
+        maximum: 8,
+        labelFormatter: function(e){
+                        if(e.value == 1)
+                          return  "ON";
+                        else if(e.value == 3)
+                          return  "D";
+                        else if(e.value == 5)
+                          return  "SB";
+                        else if(e.value == 7)
+                          return  "OFF";
+                        else
+                          return  "";
+                    },
+
+        stripLines: [
+                   {
+            value: 0,
+            thickness:2,
+            color: "lightgray",
+          },
+
+          {
+            value: 2,
+            thickness:1,
+            color: "lightgray",
+          },
+                    {
+            value: 4,
+            thickness:1,
+            color: "lightgray",
+          },
+          {
+            value: 6,
+            thickness:1,
+            color: "lightgray",
+           },
+
+
+      ]
+
+      },
+
+   axisX:{
+        maximum: 24,
+        gridColor: "lightgray" ,
+        gridThickness: 1,
+        interval: 1,
+      },
+
+    axisX2:{
+        minimum: 0,
+        maximum: 24,
+        gridColor: "lightgray" ,
+        gridThickness: 1,
+        interval: 1,
+        labelFormatter: function(e){
+                        if(e.value == 0 || e.value == 24)
+                          return  "M";
+                        else if(e.value == 12)
+                          return  "N";
+                        else if ( e.value > 12 )
+                          return e.value - 12;
+          				      else
+          					      return e.value;
+                          },
+            stripLines:[
+			 {
+				startValue:6.75,
+				endValue:7,
+              	opacity: 0.2,
+				color:"green"
+			},
+
+			{
+				value:4,
+ 				color:"green",
+              label : "34-restart"
+			},
+
+      /*{
+				startValuealue:6.50,
+        endValue:7,
+                opacity: 0.1,
+ 				color:"green"
+			}, */
+
+			],
+
+      },
+
+
+
+      axisY2: {
+        title: "Hours",
+        interval: 1,
+        maximum:8,
+        labelFormatter: function(e){
+                      if(e.value == 1)
+                        return  onHours;
+                      else if(e.value == 3)
+                        return  dHours;
+                      else if(e.value == 5)
+                        return  sbHours;
+                      else if(e.value == 7)
+                        return  offHours;
+                      else
+                        return  "";
+                },
+      },
+
+
+
+
+      data: [
+      {
+        //setting for STEP chart
+        type: "stepLine",
+        markerSize: 0,
+        click : onClick,
+        lineThickness: 2,
+        axisXType :"secondary",
+        dataPoints: [
+
+                     ]
+        },
+
+        // setting for Y2 axis
+        {
+
+              axisYType:"secondary",
+              dataPoints: [
+
+              ]
+
+        },
+       ]
+     });
+
+//drow all guiding lines ( for 24 X 4 boxs )
+for (xValue = 0; xValue < 24; xValue ++ ) {
+
+  for (yValue = 0; yValue < 8; yValue = yValue + 2) {
+
+    chart.options.data.push (
+
+            {
+                //line 1 - represents 15 mins
+                axisXType :"secondary",
+                type: "line",
+                color: "lightgray",
+                markerColor: "transparent",
+                lineThickness: 1,
+                markerSize: 0,
+                dataPoints: [
+                        { x: (0.25 + xValue ), y: (0 + yValue ) },
+                        { x: (0.25 + xValue) , y: (0.5 + yValue) },
+                     ]
+        },
+
+         {
+                //line 2 - represents 30 mins
+                axisXType :"secondary",
+                type: "line",
+                color: "lightgray",
+                markerColor: "transparent",
+                lineThickness:1,
+                markerSize: 0,
+                dataPoints: [
+                        { x: (0.5 + xValue), y: (0 + yValue) },
+                        { x: (0.5 + xValue), y: (1 + yValue) },
+                     ]
+        },
+
+         {
+                //line 3 - represents 45 mins
+                axisXType :"secondary",
+                type: "line",
+                color: "lightgray",
+                markerColor: "transparent",
+                lineThickness:1,
+                markerSize: 0,
+                dataPoints: [
+                        { x: (0.75 + xValue), y: (0 + yValue) },
+                        { x: (0.75 + xValue), y: (0.5 + yValue) },
+                     ]
+        }
+    );
+
+  }
+}
+
+//Set data for STEP chart
+chart.options.data[0].dataPoints = stepDataArray;
+
+
+var prevState = 0;
+var currentState = 0;
+var hourCount = 0.0;
+var preIndex = 0;
+//Calculate total hours per state.
+for ( counter = 1; counter < stepDataArray.length; counter ++) {
+
+  currentState = stepDataArray[counter].y;
+  // first iteration
+  if (counter == 1)
+    prevState = stepDataArray[0].y;
+
+  // if states are not same and for last iteration special case
+  if ( prevState != currentState || (counter == stepDataArray.length - 1 && prevState == currentState)) {
+
+   diff = stepDataArray[counter].x - stepDataArray[counter - 1].x;
+  }
+
+    // Hours for STATE - ON
+    if (prevState == 1)
+      onHours = onHours + diff;
+    // Hours for STATE - D
+    if (prevState == 3)
+      dHours = dHours + diff;
+    // Hours for STATE - SB
+    if (prevState == 5)
+      sbHours = sbHours + diff;
+    // Hours for STATE - OFF
+    if (prevState == 7)
+      offHours = offHours + diff;
+
+    else {
+
+    }
+
+  prevState = currentState;
+
+}
+
+
+//Draw Chart
+chart.render();
+
+//Get click event
+function onClick(e) {
+alert( e.dataSeries.type + ", dataPoint { x:" + e.dataPoint.x + ", y: "+ e.dataPoint.y + " }" );
+}
+
+//Download JPG file of chart
+document.getElementById("exportChart").addEventListener("click",function(){
+    	chart.exportChart({format: "jpeg"});
+    });
+}
+
+
+  </script>
+ {% load static %}
+  <script src="{% static "js/canvasjs.min.js" %}"></script>
+{#<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/canvasjs/1.7.0/canvasjs.min.js"></script>#}
+
+</head>
+<body>
+  <div id="chartContainer" style="height: 300px; width: 100%;">
+  </div>
+      <button id="exportChart">Export Chart</button>
+
+</body>
+</html>
+
